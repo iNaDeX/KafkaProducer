@@ -1,4 +1,3 @@
-import com.google.common.collect.Lists;
 import com.twitter.hbc.ClientBuilder;
 import com.twitter.hbc.core.Constants;
 import com.twitter.hbc.core.endpoint.StatusesFilterEndpoint;
@@ -10,6 +9,8 @@ import kafka.javaapi.producer.Producer;
 import kafka.producer.KeyedMessage;
 import kafka.producer.ProducerConfig;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -20,9 +21,10 @@ public class KafkaProducer {
     private static final String CONSUMER_SECRET = "consumerSecret";
     private static final String TOKEN = "accessToken";
     private static final String SECRET = "accessTokenSecret";
-    private static final String KAFKA_TOPIC = "kafka.twitter.raw.topic";
+    private static final String KAFKA_TOPIC = "kafka.topic";
+    private static final String TERMS_TO_TRACK = "termsToTrack";
 
-    public static void run(Context context) throws InterruptedException {
+    public static void run(Context context) {
         // Producer properties
         Properties properties = new Properties();
         properties.put("metadata.broker.list", context.getString(BROKER_LIST));
@@ -37,9 +39,9 @@ public class KafkaProducer {
 
         // Define our endpoint, with default value delimited=length (needed for our processor)
         StatusesFilterEndpoint endpoint = new StatusesFilterEndpoint();
-        endpoint.languages(Lists.newArrayList("en"));
-        // TODO : read terms to track from the configuration file
-        endpoint.trackTerms(Lists.newArrayList("microsoft", "#google"));
+        endpoint.languages(Arrays.asList("en"));
+        List<String> terms = Arrays.asList(context.getString(TERMS_TO_TRACK).split(";"));
+        endpoint.trackTerms(terms);
 
         Authentication auth = new OAuth1(context.getString(CONSUMER_KEY), context.getString(CONSUMER_SECRET), context.getString(TOKEN), context.getString(SECRET));
 
